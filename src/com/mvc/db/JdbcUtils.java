@@ -29,8 +29,8 @@ public class JdbcUtils {
 	private static DataSource dataSource = null;
 	
 	static{
-		//数据源只能被创建一次. 
-		dataSource = new ComboPooledDataSource("mvcapp");
+		//因为静态代码块只被执行一次，所以数据源只能被创建一次. 
+		dataSource = new ComboPooledDataSource("mvc");
 	}
 	
 	/**
