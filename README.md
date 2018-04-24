@@ -74,10 +74,10 @@ private void add(.....){}
 
 ##### 第二种：
 
-  - 1.获取servletPath:/addCustomer.do或/query.do等；
-  - 2.去除/和.do得到要调用的方法名；
-  - 3.利用反射调用sevletPath对应的方法；
-  - 4.创建对应的方法;
+- 1.获取servletPath:/addCustomer.do或/query.do等；
+- 2.去除/和.do得到要调用的方法名；
+- 3.利用反射调用sevletPath对应的方法；
+- 4.创建对应的方法;
   
   ```java
   	//1. 获取 ServletPath: /edit.do 或 /addCustomer.do
