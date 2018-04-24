@@ -139,7 +139,6 @@ private void query(HttpServletRequest request, HttpServletResponse response) thr
 ```
 
 > - CriteriaCustomer对象，再调用getForListWithCriteriaCustomer(CriteriaCustomer cc)方法
-
 > - 底层实现
 >   - 在CustomerDAO类里面封装了查询条件
 >   - 具体实现在CustomerDAOJdbcImpl类里面
@@ -152,7 +151,6 @@ private void query(HttpServletRequest request, HttpServletResponse response) thr
 	 */
 	public List<Customer> getForListWithCriteriaCustomer(CriteriaCustomer cc);
 ```
-
 
 ```java
 public class CustomerDAOJdbcImpl extends DAO<Customer> implements CustomerDAO{
