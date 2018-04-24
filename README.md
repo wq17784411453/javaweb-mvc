@@ -96,68 +96,73 @@ private void add(.....){}
 ```
 
 
-#### 模糊查询
+#### 查询
 
-> 封装一个JavaBean作为模糊查询条件
-
-SQL语句：
-
-```sql
-SELECT id,name,address,phone FROM customers WHERE name like %name% and address like %address% and phone like %phone%;
-```
-
-模糊查询条件：
+> - Servlet：
+>   - 调用 CustomerDAO 的 getAll() 得到 Customer 的集合
+>   - 把 Customer 的集合放入 request 中
+>   - 转发页面到 index.jsp(不能使用重定向)
+> - jsp:
+>   - 获取request中的Customers属性
+>   - 遍历显示
 
 ```java
-package com.mvcapp.domain;
+private void query(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
+				
+		List<Customer> customers = customerDAO.getAll();		
+		request.setAttribute("customers", customers);		
+		request.getRequestDispatcher("/index.jsp").forward(request, response);
+	}
+```
 
-public class CriteriaCustomer {
-	private Integer Id;
-	private String name;
-	private String address;
-	private String phone;
-	
-	public Integer getId() {
-		return Id;
-	}
-	public void setId(Integer id) {
-		Id = id;
-	}
-	public String getName() {
-		if(name != null) {
-			return "%"+name+"%";
-		}else {
-			return "%%";
-		}
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
+#### 模糊查询
+
+> - 根据传入的name，address，phone进行模糊查询
+> - 例子：name:a、address：b、phone：3 则SQL语句的样子为：SELECT id, name, address, phone FROM customers WHERE name LIKE '%a%' AND address LIKE '%b%' AND phone LIKE '%3%'
+> - 需要在CustomerDAO接口中定义一个getForListWithCriteriaCustomer(CriteriaCustomer cc)。其中CriteriaCustomer用于封装查询条件：name，address，phone。因为查询条件很多时候和domain类并不相同，所以要做成一个单独的类
+> - 拼SQL：
+
+>   - SQL：
+
+```sql
+"SELECT id, name, address, phone FROM customers WHERE " +"name LIKE ? AND address LIKE ? AND phone LIKE ?";
+```
+>   - 为了正确的填充占位符时，重写了CriteriaCustomer的getter：
+
+```java
 	public String getAddress() {
-		if(address != null) {
-			return "%"+address+"%";
-		}else {
-			return "%%";
-		}
+		if(address == null)
+			address = "%%";
+		else
+			address = "%" + address + "%";
+		return address;
 	}
-	public void setAddress(String address) {
-		this.address = address;
+```
+> - CriteriaCustomer对象，再调用getForListWithCriteriaCustomer(CriteriaCustomer cc)方法
+> - 底层实现
+>   - 在CustomerDAO类里面封装了查询条件
+
+```java
+	/**
+	 * 返回满足查询条件的 List
+	 * @param cc: 封装了查询条件
+	 * @return
+	 */
+	public List<Customer> getForListWithCriteriaCustomer(CriteriaCustomer cc);
+```
+
+>   - 具体实现在CustomerDAOJdbcImpl类里面
+
+```java
+public class CustomerDAOJdbcImpl extends DAO<Customer> implements CustomerDAO{
+
+	public List<Customer> getForListWithCriteriaCustomer(CriteriaCustomer cc) {
+		String sql = "SELECT id, name, address, phone FROM customers WHERE " +
+				"name LIKE ? AND address LIKE ? AND phone LIKE ?";
+		//修改了 CriteriaCustomer 的 getter 方法: 使其返回的字符串中有 "%%".
+				//若返回值为 null 则返回 "%%", 若不为 null, 则返回 "%" + 字段本身的值 + "%"
+		return getForList(sql, cc.getName(), cc.getAddress(), cc.getPhone());
 	}
-	public String getPhone() {
-		if(phone != null) {
-			return "%"+phone+"%";
-		}else {
-			return "%%";
-		}
-	}
-	public void setPhone(String phone) {
-		this.phone = phone;
-	}
-	@Override
-	public String toString() {
-		return "Customer [Id=" + Id + ", name=" + name + ", address=" + address + ", phone=" + phone + "]";
-	}	
-}
 ```
 
 
