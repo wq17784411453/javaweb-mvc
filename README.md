@@ -70,15 +70,14 @@ private void add(.....){}
 - 缺点：
 
   - 1.当添加一个请求时，需要在servlet中修改两处代码：switch，添加方法；
-  - 2.url中使用method=xxx 暴露了要调用的方法，不私密，有安全隐患。
-
+  - 2.url中使用method=xxx 暴露了要调用的方法，不私密，有安全隐患;
 
 - 第二种：
 
   - 1.获取servletPath:/addCustomer.do或/query.do等；
   - 2.去除/和.do得到要调用的方法名；
   - 3.利用反射调用sevletPath对应的方法；
-  - 4.创建对应的方法
+  - 4.创建对应的方法;
   
   ```java
   	//1. 获取 ServletPath: /edit.do 或 /addCustomer.do
