@@ -121,13 +121,12 @@ private void query(HttpServletRequest request, HttpServletResponse response) thr
 > - 例子：name:a、address：b、phone：3 则SQL语句的样子为：SELECT id, name, address, phone FROM customers WHERE name LIKE '%a%' AND address LIKE '%b%' AND phone LIKE '%3%'
 > - 需要在CustomerDAO接口中定义一个getForListWithCriteriaCustomer(CriteriaCustomer cc)。其中CriteriaCustomer用于封装查询条件：name，address，phone。因为查询条件很多时候和domain类并不相同，所以要做成一个单独的类
 > - 拼SQL：
-
 >   - SQL：
+>   - 为了正确的填充占位符时，重写了CriteriaCustomer的getter：
 
 ```sql
 "SELECT id, name, address, phone FROM customers WHERE " +"name LIKE ? AND address LIKE ? AND phone LIKE ?";
 ```
->   - 为了正确的填充占位符时，重写了CriteriaCustomer的getter：
 
 ```java
 	public String getAddress() {
@@ -138,9 +137,12 @@ private void query(HttpServletRequest request, HttpServletResponse response) thr
 		return address;
 	}
 ```
+
 > - CriteriaCustomer对象，再调用getForListWithCriteriaCustomer(CriteriaCustomer cc)方法
+
 > - 底层实现
 >   - 在CustomerDAO类里面封装了查询条件
+>   - 具体实现在CustomerDAOJdbcImpl类里面
 
 ```java
 	/**
@@ -151,7 +153,6 @@ private void query(HttpServletRequest request, HttpServletResponse response) thr
 	public List<Customer> getForListWithCriteriaCustomer(CriteriaCustomer cc);
 ```
 
->   - 具体实现在CustomerDAOJdbcImpl类里面
 
 ```java
 public class CustomerDAOJdbcImpl extends DAO<Customer> implements CustomerDAO{
