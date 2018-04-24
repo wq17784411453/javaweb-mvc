@@ -67,10 +67,10 @@ switch (method){
 private void add(.....){}
 ```
 
-- 缺点：
+缺点：
 
-  - 1.当添加一个请求时，需要在servlet中修改两处代码：switch，添加方法；
-  - 2.url中使用method=xxx 暴露了要调用的方法，不私密，有安全隐患;
+  1.当添加一个请求时，需要在servlet中修改两处代码：switch，添加方法；
+  2.url中使用method=xxx 暴露了要调用的方法，不私密，有安全隐患;
 
 - 第二种：
 
@@ -82,11 +82,9 @@ private void add(.....){}
   ```java
   	//1. 获取 ServletPath: /edit.do 或 /addCustomer.do
 		String servletPath = req.getServletPath();
-
 	//2. 去除 / 和 .do, 得到类似于 edit 或 addCustomer 这样的字符串
 		String methodName = servletPath.substring(1);
-		methodName = methodName.substring(0, methodName.length() - 3);
-		
+		methodName = methodName.substring(0, methodName.length() - 3);	
 		try {
 	//3. 利用反射获取 methodName 对应的方法
 			Method method = getClass().getDeclaredMethod(methodName, HttpServletRequest.class, 
