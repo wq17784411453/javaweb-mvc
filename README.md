@@ -5,6 +5,8 @@
 ### 问题：
 
 > - 在创建数据表的时候，为什么要给name字段添加唯一的约束？
+> - 在DAO.java里面T get为什么返回的是new BeanHandler<>(clazz)？
+> - 在web上进行添加操作的时候，无法像最初在控制台测试test一样，自动添加id，所以对于查询出来的结果没有id号的，不能进行删除和更新。
 
 ### 知识点
 
@@ -42,284 +44,62 @@
 >   - 在创建或修改的情况下，验证用户名是否已经被使用并给出提示
 > - 注意：不能跨层访问；只能自上向下依赖，而不能自下向上依赖
 
-### 创建数据表
+### 技术难点的实现
 
-```mysql
-mysql> Create table customers(
-    -> id int primary key auto_increment,
-    -> name varchar(30) not null unique,
-    -> address varchar(30),
-    -> phone varchar(30));
-    mysql> alter table customers add constraint name_uk unique(name);//为name字段添加唯一的约束
+#### 多个请求用一个servlet
+
+
+- 第一种：
+
+  - 1.根据method请求参数的值；
+  - 2.根据method的值调用对应的方法;
+
+```jsp
+<a href="CustomerServlet?method=add">add</a>，
 ```
 
-### Module层
-
-#### 加入`C3P0`数据源
-
-1. 下载`C3P0`数据源包
-
-2. 将数据源包拷贝到lib目录下
-
-3. 在`src`目录下添加`c3p0-config.xml`文件
-
-   ```xml
-   <?xml version="1.0" encoding="UTF-8"?>
-   <c3p0-config>
-     <named-config name="mvcapp"> 
-       <property name="user">*</property>
-   	<property name="password">*</property>
-   	<property name="driverClass">com.mysql.jdbc.Driver</property>
-   	<property name="jdbcUrl">jdbc:mysql://localhost:3306/javaweb-mvc?useSSL=true</property>
-       <property name="acquireIncrement">5</property>
-       <property name="initialPoolSize">10</property>
-       <property name="minPoolSize">10</property>
-       <property name="maxPoolSize">50</property>
-
-       <property name="maxStatements">20</property> 
-       <property name="maxStatementsPerConnection">5</property>
-     </named-config>
-   </c3p0-config>
-   ```
-
-如果在运行程序出现错误:
+此时在CustomerServlet类中添加实现add的方法。
 
 ```java
-java.lang.NoClassDefFoundError: com/mchange/v2/ser/Indirector 
+switch (method){
+	case "add":  add(request,response);break;
+	......}
+private void add(.....){}
 ```
 
-把`mchange-commons-java-0.2.11.jar`包也拷贝到lib目录
+- 缺点：
 
-#### 编写`DAO`、`JDBCUtils`工具类和`CustomerDAO`接口
+  - 1.当添加一个请求时，需要在servlet中修改两处代码：switch，添加方法；
+  - 2.url中使用method=xxx 暴露了要调用的方法，不私密，有安全隐患。
 
-DAO:
 
-```java
-package com.mvcapp.dao;
+- 第二种：
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.sql.Connection;
-import java.util.List;
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.handlers.BeanHandler;
-import org.apache.commons.dbutils.handlers.BeanListHandler;
-import org.apache.commons.dbutils.handlers.ScalarHandler;
-
-import com.mvcapp.db.JdbcUtils;
-
-/**
- * @author zp
- * 封装了基本的CRUD的方法，以供子类继承使用
- * 当前DAO直接方法中获取数据库连接
- * 整个DAO采取DBUtils解决方案
- */
-public class DAO<T> {
-	private QueryRunner queryRunner = new QueryRunner();
-	public Class<T> clazz;
-	public DAO() {
-		Type superClass = getClass().getGenericSuperclass();
-		if(superClass instanceof ParameterizedType) {
-			ParameterizedType parameterizedType = (ParameterizedType)superClass;
-			Type[] typeArgs = parameterizedType.getActualTypeArguments();
-			if(typeArgs != null && typeArgs.length > 0) {
-				if(typeArgs[0] instanceof Class) {
-					clazz = (Class<T>)typeArgs[0];
-				}
-			}
-		}
-	}
-	/**
-	 * 该方法封装了INSERT、DELETE、UPDATE操作
-	 * @param sql : sql语句
-	 * @param args　: 填充sql语句的占位符
-	 */
-	public void update(String sql, Object ...args) {
-		Connection connection = null;
-		try {
-			connection = JdbcUtils.getConnection();
-			queryRunner.update(connection,sql,args);
-		}catch(Exception e) {
-			e.printStackTrace();
-		}finally {
-			JdbcUtils.releaseConnection(connection);
-		}
-	}
-	/**
-	 * 返回对应的Ｔ的一个实例类的对象
-	 * @param sql
-	 * @param args
-	 * @return 
-	 */
-	public T get(String sql, Object ...args) {
-		Connection connection = null;
-		try {
-			connection = JdbcUtils.getConnection();
-			return queryRunner.query(connection,sql,new BeanHandler<>(clazz),args);
-		}catch(Exception e) {
-			e.printStackTrace();
-		}finally {
-			JdbcUtils.releaseConnection(connection);
-		}
-		return null;
-	}
-	/**
-	 * 返回T对应的List
-	 * @param sql
-	 * @param arge
-	 * @return 
-	 */
-	public List<T> getForList(String sql, Object ...args){
-		Connection connection = null;
-		try {
-			connection = JdbcUtils.getConnection();
-			return queryRunner.query(connection,sql,new BeanListHandler<>(clazz),args);
-		}catch(Exception e) {
-			e.printStackTrace();
-		}finally {
-			JdbcUtils.releaseConnection(connection);
-		}
-		return null;
-	}
-	/**
-	 * 返回某一个字段的值：例如返回某一条记录的customerName,或返回数据表中有多少记录
-	 * @param sql
-	 * @param args
-	 * @return 
-	 */
-	public <E> E getForValue(String sql, Object ...args) {
-		Connection connection = null;
-		try {
-			connection = JdbcUtils.getConnection();
-			return (E)queryRunner.query(connection,sql,new ScalarHandler(),args);
-		}catch(Exception e) {
-			e.printStackTrace();
-		}finally {
-			JdbcUtils.releaseConnection(connection);
-		}
-		return null;
-	}
-}
-
-```
-
-JDBCUtils：
-
->  下载JDBCUtils包http://commons.apache.org/proper/commons-dbutils/download_dbutils.cgi
-
-```java
-QueryRunner queryRunner = new QueryRunner();
-queryRunner.query(connection,sql,new BeanHandler<>(clazz),args);
-queryRunner.query(connection,sql,new BeanListHandler<>(clazz),args);
-(E)queryRunner.query(connection,sql,new ScalarHandler(),args);
-```
-
-#### 提供`CustomerDAO`接口的实现类`CustomerDAOJDBClmpl`
-
-```java
-package com.mvcapp.dao.impl;
-
-import java.util.List;
-
-import com.mvcapp.dao.CustomerDAO;
-import com.mvcapp.dao.DAO;
-import com.mvcapp.domain.CriteriaCustomer;
-import com.mvcapp.domain.Customer;
-
-public class CustomerDAOJdbcImpl extends DAO<Customer> implements CustomerDAO{
-
-	@Override
-	public List<Customer> getAll() {
-		String sql = "SELECT id,name,address,phone FROM customers";
-		return getForList(sql);
-	}
-
-	@Override
-	public void save(Customer customer) {
-		String sql = "INSERT INTO customers(name,address,phone) VALUES(?,?,?)";
-		update(sql,customer.getName(),customer.getAddress(),customer.getPhone());
-	}
-
-	@Override
-	public Customer get(Integer id) {	
-		String sql = "SELECT id,name,address,phone FROM customers WHERE id=?";
-		return get(sql,id);
-	}
-
-	
-	@Override
-	public void delete(Integer id) {
-		String sql = "DELETE FROM customers WHERE id=?";
-		update(sql,id);
-	}
-
-	@Override
-	public long getCountWithName(String name) {
-		String sql = "select count(id) FROM customers WHERE name=?";
-		return getForValue(sql,name);
-	}
-
-	@Override
-	public List<Customer> getForListWithCriteriaCustomer(CriteriaCustomer cc) {
-		String sql = "SELECT id,name,address,phone FROM customers WHERE "
-				+ "name like ? and address like ? and phone like ?";
-		return getForList(sql, cc.getName(), cc.getAddress(), cc.getPhone());
-	}
-
-}
-```
-
-### Control层
-
-> Control层由servlet组成，这里一个servlet处理多个请求。接受浏览器传来的请求并在解析请求调用Model层的API
-
-#### 一个Servlet处理多个请求的方式
-
-- 在请求后面加参数，在servlet中通过对参数的分析进行不同的响应
-
-  请求:
-
+  - 1.获取servletPath:/addCustomer.do或/query.do等；
+  - 2.去除/和.do得到要调用的方法名；
+  - 3.利用反射调用sevletPath对应的方法；
+  - 4.创建对应的方法
+  
   ```java
-  /customer?methon=add
-  /customer?methon=query
-  /customer?methon=delete
-  ```
+  	//1. 获取 ServletPath: /edit.do 或 /addCustomer.do
+		String servletPath = req.getServletPath();
 
-- 直接设置不同的请求路径，在web.xml中设置使用同一个servlet响应，然后在servlet中分析servletpath来进行不同响应
-
-  请求
-
-  ```java
-  /add.do
-  /query.do
-  /delete.do
-  ```
-
-  web.xml
-
-  ```xml
-  <servlet-mapping>
-      <servlet-name>customerservlet</servlet-name>
-      <url-pattern>*.do</url-pattern>
-  </servlet-mapping>
-  ```
-
-  servlet中
-
-  ```java
-  // 获取方法名
-  String  path = request.getServletPath();
-  String methodName = path.substring(1,path.length()-3);
-  try {
-      // 获取方法
-      Method method = this.getClass().getDeclaredMethod(methodName,                                                      HttpServletRequest.class, HttpServletResponse.class);
-      // 执行方法
-      method.invoke(this, request,response);			
-  } catch (Exception e) {
-      response.sendRedirect("error.jsp");
-      e.printStackTrace();
-  }
-  ```
+	//2. 去除 / 和 .do, 得到类似于 edit 或 addCustomer 这样的字符串
+		String methodName = servletPath.substring(1);
+		methodName = methodName.substring(0, methodName.length() - 3);
+		
+		try {
+	//3. 利用反射获取 methodName 对应的方法
+			Method method = getClass().getDeclaredMethod(methodName, HttpServletRequest.class, 
+					HttpServletResponse.class);
+	//4. 利用反射调用对应的方法
+			method.invoke(this, req, resp);
+		} catch (Exception e) {
+			e.printStackTrace();
+	//可以有一些响应.
+			resp.sendRedirect("error.jsp");
+		}
+```
 
 
 #### 模糊查询
@@ -386,34 +166,14 @@ public class CriteriaCustomer {
 }
 ```
 
-#### 删除
 
-1. 点击删除
-2. 弹出
-3. 获取id
-4. 调用DAO删除
-5. **重定向**到query.do
 
-```java
-int id = Integer.parseInt(request.getParameter("id"));
-customerDao.delete(id);
-try {
-    response.sendRedirect("query.do");
-} catch (IOException e) {
-    e.printStackTrace();
-}
-```
 
-不足:删除之后跳转回页面的查询条件是查询全部，与之前的查询条件不同
 
-### View层
 
-> View层包含index.jsp、error.jsp页面。
 
-当请求页面不存在时显示error.jsp
 
-```java
-// 在catch中加入
-response.sendRedirect("error.jsp");
-```
+
+
+
 
