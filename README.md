@@ -171,6 +171,29 @@ public class CustomerDAOJdbcImpl extends DAO<Customer> implements CustomerDAO{
 	}
 ```
 
+# 第九周
+
+> - 删除操作：
+>   - 超链接：delete.di?id=<%=cunstomer.getid()%>
+>   - servlet的delete方法：
+>      - 获取id
+>      - 调用DAO执行删除
+>      - 重定向到query.do（若目标页面不需要读取当前请求的request属性，就可以使用重定向），将显示删除后的customer的list
+>   - JSP上的jQuery提示：
+>     - 确定要删除xx的信息吗？
+
+```jsp
+<script type="text/javascript">
+	
+	$(function(){
+		$(".delete").click(function(){
+			var content = $(this).parent().parent().find("td:eq(1)").text();
+			var flag = confirm("确定要是删除" + content + "的信息吗?");
+			return flag;
+		});
+	});
+```
+
 ## javaweb-session
 
 ### Session 的创建和销毁
