@@ -7,6 +7,7 @@
 > - 在创建数据表的时候，为什么要给name字段添加唯一的约束，目的是什么？
 > - 在DAO.java里面T get为什么返回的是new BeanHandler<>(clazz)？
 > - 在web上进行添加操作的时候，无法像最初在控制台测试test一样，自动添加id，所以对于查询出来的结果没有id号的，不能进行删除和更新。
+> - 在执行更新操作的时候，Newcustomer.jsp和updateCustomer.jsp能汇总到一个页面吗？
 
 ### 解决：
 
@@ -193,6 +194,102 @@ public class CustomerDAOJdbcImpl extends DAO<Customer> implements CustomerDAO{
 		});
 	});
 ```
+
+> - 添加：
+>   - add new customer超链接连接到customer.jsp
+>   - 新建newcustomer.jsp
+>   - 在CudtomerServlet的addCustomer方法中
+
+```java
+		//1. 获取表单参数: name, address, phone
+		String name = request.getParameter("name");
+		String address = request.getParameter("address");
+		String phone = request.getParameter("phone");
+		//2. 检验 name 是否已经被占用:
+		//2.1 调用 CustomerDAO 的 getCountWithName(String name) 获取 name 在数据库中是否存在
+		long count = customerDAO.getCountWithName(name);
+		//2.2 若返回值大于 0, 则响应 newcustomer.jsp 页面: 
+		//通过转发的方式来响应 newcustomer.jsp
+		if(count > 0){
+			//2.2.1 要求再 newcustomer.jsp 页面显示一个错误消息: 用户名 name 已经被占用, 请重新选择!
+			//在 request 中放入一个属性 message: 用户名 name 已经被占用, 请重新选择!, 
+			//在页面上通过 request.getAttribute("message") 的方式来显示
+			request.setAttribute("message", "用户名" + name + "已经被占用, 请重新选择!");
+			//2.2.2 newcustomer.jsp 的表单值可以回显. 
+			//通过 value="<%= request.getParameter("name") == null ? "" : request.getParameter("name") %>"
+			//来进行回显
+			//2.2.3 结束方法: return 
+			request.getRequestDispatcher("/newcustomer.jsp").forward(request, response);
+			return;
+		}
+		//3. 若验证通过, 则把表单参数封装为一个 Customer 对象 customer
+		Customer customer = new Customer(name, address, phone);
+		//4. 调用 CustomerDAO 的  save(Customer customer) 执行保存操作
+		customerDAO.save(customer);
+		//5. 重定向到 success.jsp 页面: 使用重定向可以避免出现表单的重复提交问题.  
+		response.sendRedirect("success.jsp");
+		//request.getRequestDispatcher("/success.jsp").forward(request, response);
+	}
+```
+
+
+> - 修改：
+>   - 先显示（select操作）修改的页面，再进行修改（update操作）
+>   - 显示修改页面：
+>      - update的超链接：
+>      - edit方法：
+>      - JSP页面：
+>          - 获取请求域中的customer对象，调用对应的字段的get方法来显示值；
+>          - 使用隐藏域来保存要修改的customer对象的id：<input type="hidden" name="id" value="${id }"/>；
+>          - 使用隐藏域来保存oldName：<input type="hidden" name="oldName" value="${oldName }"/> ；
+>          - 关于隐藏域：和其他的表单域一样可以被提交到服务器，只不过在页面上不显示；
+>      - 提交到update.do
+>   - 修改操作：
+>      - update方法：
+>      - updatecustomer.jsp：隐藏域的问题，回显的问题
+>      - Newcustomer.jsp和updateCustomer.jsp能汇总到一个页面吗？
+
+```java
+//1. 获取表单参数: id, name, address, phone, oldName
+		String id = request.getParameter("id");
+		String name = request.getParameter("name");
+		String phone = request.getParameter("phone");
+		String address = request.getParameter("address");
+		String oldName = request.getParameter("oldName");
+		//2. 检验 name 是否已经被占用:
+				//2.1 比较 name 和 oldName 是否相同, 若相同说明 name 可用. 
+				//2.1 若不相同, 则调用 CustomerDAO 的 getCountWithName(String name) 获取 name 在数据库中是否存在
+		if(!oldName.equalsIgnoreCase(name)){
+			long count = customerDAO.getCountWithName(name);
+			//2.2 若返回值大于 0, 则响应 updatecustomer.jsp 页面: 通过转发的方式来响应 newcustomer.jsp
+			if(count > 0){
+				//2.2.1 在 updatecustomer.jsp 页面显示一个错误消息: 用户名 name 已经被占用, 请重新选择!
+				//在 request 中放入一个属性 message: 用户名 name 已经被占用, 请重新选择!, 
+				//在页面上通过 request.getAttribute("message") 的方式来显示
+				request.setAttribute("message", "用户名" + name + "已经被占用, 请重新选择!");
+				//2.2.2 newcustomer.jsp 的表单值可以回显. 
+				//address, phone 显示提交表单的新的值, 而 name 显示 oldName, 而不是新提交的 name
+				//2.2.3 结束方法: return 
+				request.getRequestDispatcher("/updatecustomer.jsp").forward(request, response);
+				return;
+			}
+		}
+		//3. 若验证通过, 则把表单参数封装为一个 Customer 对象 customer
+		Customer customer = new Customer(name, address, phone);
+		customer.setId(Integer.parseInt(id)); 
+		//4. 调用 CustomerDAO 的  update(Customer customer) 执行更新操作
+		customerDAO.update(customer);
+		//5. 重定向到 query.do
+		response.sendRedirect("query.do");
+	}
+```
+
+> - 深入理解面向接口编程：在类中调用的接口的方法，而不必关心代码的具体实现。这将有利于代码的解耦。使程序有更好的可移植性和可扩展性
+
+动态修改Customer的存储方式：通过修改类路径下的switch.properties文件的方式来实现type=xml或者type=jdbc
+>   - CustomerServlet中不能再通过private CustomerDAO customerDAO=new CudtomerDAOXMLImpl（）；的方式来写死实现类
+>   - 需要通过一个类的一个方法来获取具体得实现类得对象
+
 
 ## javaweb-session
 
