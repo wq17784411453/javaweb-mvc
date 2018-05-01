@@ -294,7 +294,6 @@ public class CustomerDAOJdbcImpl extends DAO<Customer> implements CustomerDAO{
 >   - 需要通过一个类的一个方法来获取具体得实现类得对象
 
 
-## javaweb-session
 
 ### Session 的创建和销毁
 
@@ -330,6 +329,7 @@ request.getSession(): 相当于 request.getSession(true);
 
 
 ### http-session
+
 
 > - HttpSession 的生命周期：
 >   - 什么时候创建 HttpSession 对象
