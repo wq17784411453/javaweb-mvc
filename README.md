@@ -1,4 +1,4 @@
-[演示链接](http://www.xidabadminton.top:8080/javaweb-mvc/index.jsp)
+[MVC演示链接](http://www.xidabadminton.top:8080/javaweb-mvc/index.jsp)
 
 ## 学习过程中记录的一些知识点和问题
 
@@ -399,6 +399,68 @@ request.getSession(): 相当于 request.getSession(true);
 >         - 在目标的 Servlet 中: 获取 session 和 表单域 中的 验证码的 值
 >         - 比较两个值是否一致: 若一致, 受理请求, 且把 session 域中的 验证码 属性清除
 >         - 若不一致, 则直接通过重定向的方式返回原表单页面, 并提示用户 "验证码错误"
+
+
+# 第十周
+
+### cookie：
+
+> - HTTP协议是一种无状态的协议，WEB服务器本身不能识别出哪些请求是同一个浏览器发出的，浏览器的每一次请求都是完全孤立的；即使http1.1支持持续链接，但当用户有一段时间没有提交请求，连接也会关闭；作为一个web服务器，必须能够采用一种机制来唯一的标识一个用户，同时记录该用户的状态。
+
+> - 会话和会话状态：
+>    - web应用中的会话是指一个客户端刘炼气与web服务器之间持续发生的一系列请求和响应过程。
+>    - web应用的会话状态是指web服务器与浏览器在会话过程中产生的状态信息，借助会话状态
+>    - web服务器能够把属于同一会话中的一系列的请求和响应过程关联起来
+
+> - 如何实现有状态的会话：
+>    - web服务器端程序要能从大量的请求消息中区分出哪些请求消息属于同一个会话，即能识别出来同一个浏览器的访问请求，这需要浏览器对其发出的每个请求消息都进行标识：属于同一个会话中的请求消息都附带同样的标识号，而属于不同会话的请求消息总是附带不同的标识号，这个标识号就称之为会话ID
+>    - 在servlet规范中，常用Cookie和Session两种机制完成会话跟踪。
+
+> - cookie机制：
+>    - cookie机制采用的是在客户端保持HTTP状态信息的方案；
+>    - cookie是在浏览器访问web服务器的某个资源时，由web服务器在http响应消息头中附带传送给浏览器的一个小文本文件。
+>    - 一旦web浏览器保存了某个cookie，那么它在以后每次访问该web服务器时，都会在http请求头中将这个cookie回传给web服务器。
+>    - 底层实现原理：web服务器通过在http响应消息中增加set-Cookie响应头字段将Cookie信息发送给浏览器，浏览器则通过在http请求消息中增加cookie请求头字段将cookie回传给web服务器；
+>    - 一个cookie只能识别一种信息，它至少含有一个标识该信息的名称和设置值
+>    - 一个web站点可以给一个web浏览器发送多个cookie，一个web浏览器也可以存储多个web站点提供的cookie
+>    - 浏览器一般只允许存放300个cookie，每个站点最多存放20个cookie，每个cookie的大小限制为4kb。
+
+> - 在servlet程序中使用cookie
+>    - servlet API中提供了一个java.servlet.http.Cookie类来封装Cookie信息，它包含生成 Cookie信息和提取Cookie信息的各个属性的方法。
+>    - cookie类的方法：
+>       - 构造方法：public Cookie(String name,String value)
+>       - getName方法
+>       - setValue与getValue方法
+>       - SetMaxAge与GetMaxAge方法
+>       - setPath与getPath方法
+>    - httpservletresponse接口中定义了一个addCookie方法，它用于在发送给浏览器的HTTP响应消息中增加一个Set-Cookie响应头字段。
+>    - httpservletrequest接口中定义了一个getCookie方法，它用于从HTTP请求消息的Cookie请求字段中获取所有的Cookie项
+
+> - Cookie的发送：
+>    - 创建Cookie对象
+>    - 设置最大时效
+>    - 将Cookie放入到HTTP响应报头
+>       - 如果创建了一个Cookie，并将它发送到浏览器，默认情况下它是一个会话级别的cookie；存储在浏览器的内存中，用户退出浏览器之后被删除，并给出一个以秒为单位的时间。将最大时效设为0则是命令浏览器删除该cookie
+>       - 发送cookie需要使用httpservletresponse的addCookie方法，将cookie差插入到一个Set-Cookie HTTP响应报头中。由于这个方法并不修改任何之前指定的Set-Cookie报头，而是创建新的报头，因此将这个方法称为是addCookie，而非setCookie
+
+> - 会话cookie和持久cookie的区别：
+>    - 如果不设置过期时间，则表示这个cookie生命周期为浏览器会话期间，只要关闭浏览器窗口，cookie就消失了。这种生命周期为浏览器会话期的cookie被称为会话cookie。会话cookie一般不保存在硬盘上而是保存在内存里
+>    - 如果设置了过期时间，浏览器就会把cookie保存到硬盘上，关闭后再次打开浏览器，这些cookie依然有效直到超过设定的过期时间
+>    - 存储在硬盘上的cookie可以在不同的浏览器进程间共享，比如两个IE窗口。而对于保存在内存的cookie，不同的浏览器有不同的处理方式
+
+> - 自动登陆：
+>    - 不需要填写用户名和密码等信息，可以自动登陆到系统
+
+> - books.jsp
+>    - 显示最近浏览得五本书：
+>       - 获取所有的cookie；
+>       - 从中筛选出Book的Cookie；
+>       - 如果cookiename为aiguigu_book_开头的即符合条件；
+>       - 显示cookievalue
+> - book.jsp
+>    - 把书的信息以cookie的方式传回给浏览器，删除一个cookie：
+>       - 确定要被删除的cookie：aiguigu_book_开头的cookie数量大于或等于5，若从books.jsp传入的book不在aiguigu_book_的cookie中，则删除较早的那个cookie（aiguigu_book_数组的第一个cookie），若在其中，则删除该cookie； 
+>       - 把从books.jsp传入的book作为一个cookie返回
 
 
 
