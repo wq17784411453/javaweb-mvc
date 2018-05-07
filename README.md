@@ -1,5 +1,8 @@
 [MVC演示链接](http://www.xidabadminton.top:8080/javaweb-mvc/index.jsp)
 
+[Cookie演示链接](http://www.xidabadminton.top:8080/day_2/books.jsp)
+
+
 ## 学习过程中记录的一些知识点和问题
 
 ### 问题：
@@ -11,10 +14,10 @@
 > - 什么时候创建 HttpSession 对象?
 > - 在 Serlvet 中如何获取 HttpSession 对象？
 > - 什么时候销毁 HttpSession 对象?
+> - 如何实现有状态的会话?
+> - cookie是如何进行删除的？
 
-### 解决：
 
-> - 第三个：在创建数据库的时候，没有指定id为主键，所以在CustomerServlet类里面无法获取参数id。
 
 ### 知识点
 
