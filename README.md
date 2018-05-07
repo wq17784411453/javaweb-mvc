@@ -1,6 +1,6 @@
 [MVC演示链接](http://www.xidabadminton.top:8080/javaweb-mvc/index.jsp)
 
-[Cookie演示链接](http://www.xidabadminton.top:8080/day_2/books.jsp)
+[Cookie演示链接](http://www.xidabadminton.top:8080/day_2/app_2/books.jsp)
 
 
 ## 学习过程中记录的一些知识点和问题
