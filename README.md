@@ -2,6 +2,8 @@
 
 [Cookie演示链接](http://www.xidabadminton.top:8080/day_2/app_2/books.jsp)
 
+[session之购物车演示链接](http://www.xidabadminton.top:8080/javaweb-httpsession/shoppingcart/step-1.jsp)
+
 
 ## 学习过程中记录的一些知识点和问题
 
