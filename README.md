@@ -468,8 +468,265 @@ request.getSession(): 相当于 request.getSession(true);
 >       - 把从books.jsp传入的book作为一个cookie返回
 
 
+# 十一周和十二周
+
+### EL表达式：
+
+<%@ page isELIgnored="true"%> 表示是否禁用EL语言,TRUE表示禁止.FALSE表示不禁
+
+语法格式：${expression}
+
+EL提供.和[]两种运算符来存取数据。当要存取的**属性名称中包含一些特殊字符，如.或?等并非字母或数字的符号，就一定要使用 []**
+
+取变量时，若没有指定范围，则会依序从Page、Request、Session、Application范围查找。
+
+> - 属性范围在EL中的名称
+```java
+
+	Page            PageScope
+	Request         RequestScope
+	Session         SessionScope
+	Application     ApplicationScope
+```
+> - EL中隐含对象：
+>    - 与范围有关：使用时相当于 范围.getAttribute()
+```java
+	PageScope
+	RequestScope
+	SessionScope
+	ApplicationScope
+```
+>    - 与输入对象有关：相当于 request.getParameter()或request.getParameterValues()
+```java	
+	param 获取一个参数
+	paramValues 获取一组参数
+```
+> - 其他
+```java
+	cookie 通过cookie.cookie名获取cookie
+	header
+	headerValues
+	initParam 当前web应用的初始化参数
+	pageContext 即为PageContext类型，但只能读
+```
+> - EL可以进行自动的类型转换;EL关系运算符必须放在表达式里;Empty运算符：放在{}内首位，可作用于后边的集合。若该集合不存在或为空，则表达式输出为true
 
 
+### 自定义标签
+
+> - HelloWorld
+>   - 创建一个标签处理器类: 实现 SimpleTag 接口. 
+>   - 在 WEB-INF 文件夹下新建一个 .tld(标签库描述文件) 为扩展名的 xml 文件. 并拷入固定的部分: 并对 
+description, display-name, tlib-version, short-name, uri 做出修改
+
+```xml
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+    version="2.0">
+    
+  <description>JSTL 1.1 core library</description>
+  <display-name>JSTL core</display-name>
+  <tlib-version>1.1</tlib-version>
+  <short-name>c</short-name>
+  <uri>http://java.sun.com/jsp/jstl/core</uri>
+  
+</taglib>
+```
+
+>   - 在 tld 文件中描述自定义的标签:
+
+```tag
+<!-- 描述自定义的 HelloSimpleTag 标签 -->
+  <tag>
+  	<!-- 标签的名字: 在 JSP 页面上使用标签时的名字 -->
+  	<name>hello</name>
+  	
+  	<!-- 标签所在的全类名 -->
+  	<tag-class>com.atguigu.javaweb.tag.HelloSimpleTag</tag-class>
+  	<!-- 标签体的类型 -->
+  	<body-content>empty</body-content>
+  </tag>
+ ```
+  
+>   - 在 JSP 页面上使用自定义标签: 
+>      - 使用 taglib 指令导入标签库描述文件: <%@taglib uri="http://www.atguigu.com/mytag/core" prefix="atguigu" %>
+>      - 使用自定义的标签: <atguigu:hello/> 
+	
+>   - setJspContext: 一定会被 JSP 引擎所调用, 先于 doTag, 把代表 JSP 引擎的 pageContext 传给标签处理器类. 
+
+```java
+private PageContext pageContext;
+	
+@Override
+public void setJspContext(JspContext arg0) {
+	System.out.println(arg0 instanceof PageContext);  
+	this.pageContext = (PageContext) arg0;
+}
+```
+
+>   - 带属性的自定义标签:
+
+>      - 先在标签处理器类中定义 setter 方法. 建议把所有的属性类型都设置为 String 类型. 
+
+```java
+private String value;
+private String count;
+
+public void setValue(String value) {
+	this.value = value;
+}
+
+public void setCount(String count) {
+	this.count = count;
+}
+```
+
+>      - 在 tld 描述文件中来描述属性:
+
+```xml
+<!-- 描述当前标签的属性 -->
+<attribute>
+	<!-- 属性名, 需和标签处理器类的 setter 方法定义的属性相同 -->
+	<name>value</name>
+	<!-- 该属性是否被必须 -->
+	<required>true</required>
+	<!-- rtexprvalue: runtime expression value 
+		当前属性是否可以接受运行时表达式的动态值 -->
+	<rtexprvalue>true</rtexprvalue>
+</attribute>
+```
+
+>      - 在页面中使用属性, 属性名同 tld 文件中定义的名字. 
+```xml
+<atguigu:hello value="${param.name }" count="10"/>
+```
+>   - 通常情况下开发简单标签直接继承 SimpleTagSupport 就可以了. 可以直接调用其对应的 getter 方法得到对应的 API 
+```java
+public class SimpleTagSupport implements SimpleTag{
+    
+    public void doTag() 
+        throws JspException, IOException{}
+    
+    private JspTag parentTag;
+    
+    public void setParent( JspTag parent ) {
+        this.parentTag = parent;
+    }
+    
+    public JspTag getParent() {
+        return this.parentTag;
+    }
+    
+    private JspContext jspContext;
+    
+    public void setJspContext( JspContext pc ) {
+        this.jspContext = pc;
+    }
+    
+    protected JspContext getJspContext() {
+        return this.jspContext;
+    }
+    
+    private JspFragment jspBody;
+                
+    public void setJspBody( JspFragment jspBody ) {
+        this.jspBody = jspBody;
+    }
+    
+    protected JspFragment getJspBody() {
+        return this.jspBody;
+    }   
+}
+```
+
+
+### JSTL:
+
+> -  c:out 主要用于对特殊字符进行转换. 真正进行输出时, 建议使用 c:out, 而不是使用 EL
+> - c:set: 可以为域赋属性值。 而对域对象中的 JavaBean 的属性赋值用的并不多. 
+> - c:remove: 移除指定域对象的指定属性值(较少使用, 即便移除也是在 Servlet 中完成)
+> - c:if: 在页面上对现实的内容进行过滤, 把结果存储到域对象的属性中. 但不灵活, 会被其他的自定义标签所取代. 
+> - c:choose, c:when, c:otherwise: 作用同上, 但麻烦, 不灵活.
+> - c:forEach: 对集合进行遍历的. 常用!
+> - c:forTokens: 处理字符串, 类似于 String 累的 split() 方法(知道即可)
+> - c:import: 导入页面到当前页面的. (了解)
+> - c:redirect: 当前页面进行重定向的. (使用较少)
+> - c:url: 产生一个 URL 的, 可以进行 URL 重写, 变量值编码, 较为常用. 
+
+> - 开发有父标签的标签:
+>    - 父标签无法获取子标签的引用, 父标签仅把子标签作为标签体来使用. 
+>    - 子标签可以通过 getParent() 方法来获取父标签的引用(需继承 SimpleTagSupport 或自实现 SimpleTag 接口的该方法):
+若子标签的确有父标签, JSP 引擎会把代表父标签的引用通过  setParent(JspTag parent)  赋给标签处理器
+>    - 注意: 父标签的类型是 JspTag 类型. 该接口是一个空接口, 但是来统一 SimpleTag 和 Tag 的. 实际使用需要进行类型的强制转换.
+>    - 在 tld 配置文件中, 无需为父标签有额外的配置. 但, 子标签是是以标签体的形式存在的, 所以父标签的 <body-content></body-content>
+需设置为 scriptless
+>    - 实现 
+```jsp
+<c:choose>
+	<c:when test="${param.age > 24}">大学毕业</c:when>
+	<c:when test="${param.age > 20}">高中毕业</c:when>
+	<c:otherwise>高中以下...</c:otherwise>
+</c:choose>
+
+	> 开发 3 个标签: choose, when, otherwise
+	> 其中 when 标签有一个 boolean 类型的属性: test
+	> choose 是 when 和 otherwise 的父标签
+	> when 在 otherwise 之前使用
+	
+	> 在父标签 choose 中定义一个 "全局" 的 boolean 类型的 flag: 用于判断子标签在满足条件的情况下是否执行. 
+	
+		* 若 when 的 test 为 true, 且 when 的父标签的 flag 也为 true, 则执行 when 的标签体(正常输出标签体的内容), 
+		     同时把 flag 设置为 false
+		* 若 when 的 test 为 true, 且 when 的父标签的 flag 为 false, 则不执行标签体. 
+		* 若 flag 为 true, otherwise 执行标签体. 
+```
+
+> - 带标签体的自定义标签: 
+
+>    - 若一个标签有标签体: 
+```java
+<atguigu:testJspFragment>abcdefg</atguigu:testJspFragment>
+```
+在自定义标签的标签处理器中使用 JspFragment 对象封装标签体信息. 
+
+>    - 若配置了标签含有标签体, 则 JSP 引擎会调用 setJspBody() 方法把 JspFragment 传递给标签处理器类,在 SimpleTagSupport 中还定义了一个 getJspBody() 方法, 用于返回 JspFragment 对象. 
+>    - JspFragment 的 invoke(Writer) 方法: 把标签体内容从 Writer 中输出, 若为 null, 则等同于 invoke(getJspContext().getOut()), 即直接把标签体内容输出到页面上.有时, 可以 借助于 StringWriter, 可以在标签处理器类中先得到标签体的内容: 
+```java
+//1. 利用 StringWriter 得到标签体的内容.
+StringWriter sw = new StringWriter();
+bodyContent.invoke(sw);
+//2. 把标签体的内容都变为大写
+String content = sw.toString().toUpperCase();
+```
+> - 在 tld 文件中, 使用 body-content 节点来描述标签体的类型: 
+
+<body-content>: 指定标签体的类型, 大部分情况下, 取值为 scriptless。可能取值有 3 种：
+empty: 没有标签体	
+scriptless: 标签体可以包含 el 表达式和 JSP 动作元素，但不能包含 JSP 的脚本元素
+tagdependent: 表示标签体交由标签本身去解析处理。
+若指定 tagdependent，在标签体中的所有代码都会原封不动的交给标签处理器，而不是将执行结果传递给标签处理器
+
+<body-content>tagdependent</body-content>
+
+> - 定义一个自定义标签: <atguigu:printUpper time="10">abcdefg</atguigu> 把标签体内容转换为大写, 并输出 time 次到
+浏览器上. 
+
+> -  实现 forEach 标签: 
+```jsp
+	> 两个属性: items(集合类型, Collection), var(String 类型)
+	
+	> doTag: 
+	
+		* 遍历 items 对应的集合
+		* 把正在遍历的对象放入到 pageContext 中, 键: var, 值: 正在遍历的对象. 
+		* 把标签体的内容直接输出到页面上. 
+
+    <c:forEach items="${requestScope.customers }" var="cust2">
+		${pageScope.cust2.id } -- ${cust2.name } <br>
+	</c:forEach>
+```	
+		
 
 
 
