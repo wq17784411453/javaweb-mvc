@@ -725,8 +725,116 @@ tagdependent: 表示标签体交由标签本身去解析处理。
     <c:forEach items="${requestScope.customers }" var="cust2">
 		${pageScope.cust2.id } -- ${cust2.name } <br>
 	</c:forEach>
+```
+
+# 十三周
+
+> - Struts2概述：
+>    - Struts2是一个用来开发MVC应用程序的框架，它提供了Web应用程序开发过程中的一些常见问题的解决方案：对来自用户的输入数据进行合法性验证、统一的布局、可扩展性、国际化和本地化、直接Ajax、表单的重复提交、文件的上传和下载
+
+> - Struts2和Strus1
+>    - 在体系结构方面更优秀：类更少，更高效：
+>    - 在Struts2中无需使用“ActionForm”来封装请求参数；
+>    - 扩展更容易：Struts2通过拦截器完成了框架的大部分工作.在Struts2中插入了一个拦截器对象相当简便易行
+>    - 更容易测试：即使不使用浏览器也可以对基于Struts2的应用进行测试
+
+> - VS自实现
+>    - 搭建Struts2的开发环境
+>    - 不需要显示的定义Filter，而使用的是struts2的配置文件
+>    - detail.jsp比先前变得更简单了
+>    - 步骤:
+>       - 由 product-input.action 转到 /WEB-INF/pages/input.jsp
+```xml	
+	在 struts2 中配置一个 action
+	
+	<action name="product-input">
+		<result>/WEB-INF/pages/input.jsp</result>
+	</action>
 ```	
-		
+>       - 由 input.jsp 页面的 action: product-save.action 到 Product's save, 再到  /WEB-INF/pages/details.jsp
+```xml
+	<action name="product-save" class="com.atguigu.struts2.helloworld.Product"
+		method="save">
+		<result name="details">/WEB-INF/pages/details.jsp</result>	
+	</action>
+```	
+>       - 在 Prodcut 中定义一个 save 方法, 且返回值为 details
+
+> - result:
+
+>    - result 是 action 节点的子节点
+>    - result 代表 action 方法执行后, 可能去的一个目的地
+>    - 一个 action 节点可以配置多个 result 子节点. 
+>    - result 的 name 属性值对应着 action 方法可能有的一个返回值. 
+>    - result 一共有 2 个属性, 还有一个是 type: 表示结果的响应类型
+>    - result 的 type 属性值在 struts-default 包的 result-types 节点的 name 属性中定义.常用的有 :
+>       - dispatcher(默认的): 转发. 同 Servlet 中的转发. 
+>       - redirect: 重定向
+>       - redirectAction: 重定向到一个 Action
+>       - 注意: 通过 redirect 的响应类型也可以便捷的实现 redirectAction 的功能!
+ ```xml   	
+    <result name="index" type="redirectAction">
+		<param name="actionName">testAction</param>
+		<param name="namespace">/atguigu</param>
+	</result>
+	
+	OR
+	
+	<result name="index" type="redirect">/atguigu/testAction.do</result>
+```    	
+>    - chain: 转发到一个 Action
+>    - 注意: 不能通过 type=dispatcher 的方式转发到一个 Action;只能是:
+
+ ```xml       
+    <result name="test" type="chain">
+		<param name="actionName">testAction</param>
+		<param name="namespace">/atguigu</param>
+	</result>	
+	不能是:
+	
+	<result name="test">/atguigu/testAction.do</result>
+```			
+			     
+> - ActionSupport
+
+>    - ActionSupport 是默认的 Action 类: 若某个 action 节点没有配置 class 属性, 则 ActionSupport 即为
+待执行的 Action 类. 而 execute 方法即为要默认执行的 action 方法
+```xml
+<action name="testActionSupport">
+	<result>/testActionSupport.jsp</result>
+</action>
+等同于
+<action name="testActionSupport"
+	class="com.opensymphony.xwork2.ActionSupport"
+	method="execute">
+	<result>/testActionSupport.jsp</result>
+</action>
+```
+>    - 在手工完成字段验证, 显示错误消息, 国际化等情况下, 推荐继承 ActionSupport. 
+
+> - 关于 Struts2 请求的扩展名问题
+
+>    - org.apache.struts2 包下的 default.properties 中配置了 Struts2 应用个的一些常量
+>    - struts.action.extension 定义了当前 Struts2 应用可以接受的请求的扩展名.
+>    - 可以在 struts.xml 文件中以常量配置的方式修改 default.properties 所配置的常量.
+```xml
+<constant name="struts.action.extension" value="action,do,"></constant>
+```
+
+> - action和action类
+>    - action：代表一个struts2的请求；应用程序可以完成的每一个操作。例如：显示一个登陆表单，把产品信息保存起来
+>    - action类：能够处理Struts2请求的类；普通的java类，可以有属性和方法，同时必须遵守下面的这些规则：属性的名字必须遵守与JavaBeans属性名相同的命名规则。属性的类型可以是任意类型，从字符串到非字符串(基本数据库类型)之间的数据转换可以自动发生；必须有一个不带参的构造器；至少提供一个struts在执行这个action时调用的方法；同一个Action类可以包含多个action方法；Struts2会为每一个HTTP请求创建一个新的Action实例
+
+> - 在action中访问web资源
+>    - 在Action中，可以通过一下方式访问web的HttpSession，HttpServletRequest，HttpServletResponse等资源：与Servlet API解耦的访问方式(只能访问有限的Servlet API对象，且只能访问有限的方法(读取请求参数，读写域对象的属性，))、与servlet API耦合的访问方式(可以访问更多的Servlet API对象，且可以调用其原生的方法)。
+
+> - 什么是web资源？
+>    - HttpServletRequest，HttpServletResponse，ServletContext等原生的Servlet ApI。
+
+> - 为什么访问web资源？
+>    - B\S的应用的Controller中必然需要访问web资源：向域对象中读写属性，读写Cookie，获取realPath。。。
+
+
 
 
 
