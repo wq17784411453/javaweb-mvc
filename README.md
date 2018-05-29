@@ -5,6 +5,26 @@
 [session之购物车演示链接](http://www.xidabadminton.top:8080/javaweb-httpsession/shoppingcart/step-1.jsp)
 
 
+<a name="目录"></a>
+
+# 目录
+
+<a href="#w8">第八周</a>
+
+<a href="#w9">第九周</a>
+
+<a href="#w10">第十周</a>
+
+<a href="#w12">第十一和十二周</a>
+
+<a href="#w13">第十三周</a>
+
+
+
+-------
+
+
+
 ## 学习过程中记录的一些知识点和问题
 
 ### 问题：
@@ -23,7 +43,13 @@
 
 ### 知识点
 
+### 
+<a name="w8"></a>
+
+-------
 # 第八周
+
+<a href="#目录">回到目录</a>
 
 ## javaweb-mvc
 > - MVC的概念：是Model-View-Controller的简称，即模型-视图-控制器。MVC是一种设计模式，它把应用程序分成三个核心模块：模型、视图、控制器，他们各自处理自己的任务。
@@ -180,7 +206,13 @@ public class CustomerDAOJdbcImpl extends DAO<Customer> implements CustomerDAO{
 	}
 ```
 
+### 
+<a name="w9"></a>
+
+-------
 # 第九周
+
+<a href="#目录">回到目录</a>
 
 > - 删除操作：
 >   - 超链接：delete.di?id=<%=cunstomer.getid()%>
@@ -406,7 +438,13 @@ request.getSession(): 相当于 request.getSession(true);
 >         - 若不一致, 则直接通过重定向的方式返回原表单页面, 并提示用户 "验证码错误"
 
 
+### 
+<a name="w10"></a>
+
+-------
 # 第十周
+
+<a href="#目录">回到目录</a>
 
 ### cookie：
 
@@ -468,7 +506,13 @@ request.getSession(): 相当于 request.getSession(true);
 >       - 把从books.jsp传入的book作为一个cookie返回
 
 
-# 十一周和十二周
+### 
+<a name="w12"></a>
+
+-------
+# 第十一和十二周
+
+<a href="#目录">回到目录</a>
 
 ### EL表达式：
 
@@ -727,7 +771,13 @@ tagdependent: 表示标签体交由标签本身去解析处理。
 	</c:forEach>
 ```
 
-# 十三周
+### 
+<a name="w13"></a>
+
+-------
+# 第十三周
+
+<a href="#目录">回到目录</a>
 
 > - Struts2概述：
 >    - Struts2是一个用来开发MVC应用程序的框架，它提供了Web应用程序开发过程中的一些常见问题的解决方案：对来自用户的输入数据进行合法性验证、统一的布局、可扩展性、国际化和本地化、直接Ajax、表单的重复提交、文件的上传和下载
