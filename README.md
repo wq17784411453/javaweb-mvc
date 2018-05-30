@@ -9,6 +9,10 @@
 
 # 目录
 
+<a href="https://github.com/wq17784411453/firstservlet">第1~6周</a>
+
+<a href="https://github.com/wq17784411453/UserManagerSystem">第七周</a>
+
 <a href="#w8">第八周</a>
 
 <a href="#w9">第九周</a>
