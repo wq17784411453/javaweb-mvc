@@ -846,13 +846,9 @@ tagdependent: 表示标签体交由标签本身去解析处理。
 
 >    - 通过 GET 或 POST 请求直接访问。 
 
->       - FORWARD：如果目标资源是通过RequestDispatcher的forward()方法访问时，那么该过滤器将被调用，除此之外，该过滤器不会被调用。
+>       - FORWARD：如果目标资源是通过RequestDispatcher的forward()方法访问时，那么该过滤器将被调用，除此之外，该过滤器不会被调用。或 <jsp:forward page="/..." /> 或 通过 page 指令的 errorPage 转发页面. <%@ page errorPage="test.jsp" %>
 
-或 <jsp:forward page="/..." /> 或 通过 page 指令的 errorPage 转发页面. <%@ page errorPage="test.jsp" %>
-
->       -  INCLUDE：如果目标资源是通过RequestDispatcher的include()方法访问时，那么该过滤器将被调用。除此之外，该过滤器不会被调用。
-
-或 <jsp:include file="/..." />
+>       -  INCLUDE：如果目标资源是通过RequestDispatcher的include()方法访问时，那么该过滤器将被调用。除此之外，该过滤器不会被调用。或 <jsp:include file="/..." />
 
 >       - ERROR：如果目标资源是通过声明式异常处理机制调用时，那么该过滤器将被调用。除此之外，过滤器不会被调用。
 
